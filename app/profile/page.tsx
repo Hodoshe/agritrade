@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
+import Link from 'next/link'
 
 interface Profile {
   id: string
@@ -69,7 +70,6 @@ export default function Profile() {
 
       let profilePictureUrl = profile.profile_picture_url
 
-      // Upload profile picture if provided
       if (profilePicture) {
         const fileExt = profilePicture.name.split('.').pop()
         const fileName = `${profile.id}/profile.${fileExt}`
@@ -87,7 +87,6 @@ export default function Profile() {
         profilePictureUrl = publicUrl
       }
 
-      // Update profile
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
@@ -122,10 +121,7 @@ export default function Profile() {
       </div>
     )
   }
-
-  if (!profile) return null
-
-  return (
+return (
     <div className="min-h-screen">
       <Navbar />
 
@@ -134,86 +130,44 @@ export default function Profile() {
           <h1 className="text-3xl font-bold gradient-text mb-8">Profile Settings</h1>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Profile Picture */}
             <div className="flex items-center gap-6">
               <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-800 flex items-center justify-center">
                 {profile.profile_picture_url ? (
-                  <img
-                    src={profile.profile_picture_url}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={profile.profile_picture_url} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
                   <div className="text-4xl">👤</div>
                 )}
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Profile Picture</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setProfilePicture(e.target.files?.[0] || null)}
-                  className="text-sm"
-                />
+                <input type="file" accept="image/*" onChange={(e) => setProfilePicture(e.target.files?.[0] || null)} className="text-sm" />
               </div>
             </div>
 
-            {/* Full Name */}
             <div>
               <label className="block text-sm font-medium mb-2">Full Name *</label>
-              <input
-                type="text"
-                name="full_name"
-                value={profile.full_name || ''}
-                onChange={handleChange}
-                required
-              />
+              <input type="text" name="full_name" value={profile.full_name || ''} onChange={handleChange} required />
             </div>
 
-            {/* Email (read-only) */}
             <div>
               <label className="block text-sm font-medium mb-2">Email Address</label>
-              <input
-                type="email"
-                value={profile.email}
-                disabled
-                className="opacity-50 cursor-not-allowed"
-              />
+              <input type="email" value={profile.email} disabled className="opacity-50 cursor-not-allowed" />
               <p className="text-xs text-gray-400 mt-1">Email cannot be changed</p>
             </div>
 
-            {/* Company Name */}
             <div>
               <label className="block text-sm font-medium mb-2">Company/Farm Name</label>
-              <input
-                type="text"
-                name="company_name"
-                value={profile.company_name || ''}
-                onChange={handleChange}
-                placeholder="e.g., Green Valley Farms"
-              />
+              <input type="text" name="company_name" value={profile.company_name || ''} onChange={handleChange} placeholder="e.g., Green Valley Farms" />
             </div>
 
-            {/* Phone */}
             <div>
               <label className="block text-sm font-medium mb-2">Phone Number</label>
-              <input
-                type="tel"
-                name="phone"
-                value={profile.phone || ''}
-                onChange={handleChange}
-                placeholder="+27 XX XXX XXXX"
-              />
+              <input type="tel" name="phone" value={profile.phone || ''} onChange={handleChange} placeholder="+27 XX XXX XXXX" />
             </div>
 
-            {/* Province */}
             <div>
               <label className="block text-sm font-medium mb-2">Province</label>
-              <select
-                name="province"
-                value={profile.province || ''}
-                onChange={handleChange}
-              >
+              <select name="province" value={profile.province || ''} onChange={handleChange}>
                 <option value="">Select province</option>
                 {PROVINCES.map(prov => (
                   <option key={prov} value={prov}>{prov}</option>
@@ -221,7 +175,6 @@ export default function Profile() {
               </select>
             </div>
 
-            {/* Subscription Info (read-only) */}
             <div className="glass-card p-6 bg-agri-green/10">
               <h3 className="font-bold mb-4">Subscription Details</h3>
               <div className="grid md:grid-cols-2 gap-4 text-sm">
@@ -234,28 +187,16 @@ export default function Profile() {
                   <span className="ml-2 font-bold">{profile.listings_remaining}</span>
                 </div>
               </div>
-              <Link
-                href="/pricing"
-                className="inline-block mt-4 btn-primary text-white text-sm px-6 py-2"
-              >
+              <Link href="/pricing" className="inline-block mt-4 btn-primary text-white text-sm px-6 py-2">
                 Upgrade Plan
               </Link>
             </div>
 
-            {/* Submit Button */}
             <div className="flex gap-4">
-              <button
-                type="submit"
-                disabled={saving}
-                className="btn-primary text-white flex-1 disabled:opacity-50"
-              >
+              <button type="submit" disabled={saving} className="btn-primary text-white flex-1 disabled:opacity-50">
                 {saving ? 'Saving...' : 'Save Changes'}
               </button>
-              <button
-                type="button"
-                onClick={() => router.push('/dashboard')}
-                className="glass-card px-8 py-3"
-              >
+              <button type="button" onClick={() => router.push('/dashboard')} className="glass-card px-8 py-3">
                 Cancel
               </button>
             </div>
@@ -265,3 +206,4 @@ export default function Profile() {
     </div>
   )
 }
+  if (!profile) return null
