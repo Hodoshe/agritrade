@@ -83,7 +83,6 @@ if (!user) throw new Error('Not authenticated')
 let mainImageUrl = ''
 const additionalImageUrls: string[] = []
 
-// Upload main image
 if (mainImage) {
 const fileExt = mainImage.name.split('.').pop()
 const fileName = `${user.id}/${Date.now()}_main.${fileExt}`
@@ -101,7 +100,6 @@ const { data: { publicUrl } } = supabase.storage
 mainImageUrl = publicUrl
 }
 
-// Upload additional images
 for (let i = 0; i < additionalImages.length; i++) {
 const file = additionalImages[i]
 const fileExt = file.name.split('.').pop()
@@ -119,6 +117,14 @@ const { data: { publicUrl } } = supabase.storage
 
 additionalImageUrls.push(publicUrl)
 }
+
+// Calculate expiration based on subscription plan
+const daysToExpire =
+profile.subscription_plan === 'starter' ? 60 :
+profile.subscription_plan === 'professional' ? 90 : 30;
+
+const expiresAt = new Date();
+expiresAt.setDate(expiresAt.getDate() + daysToExpire);
 
 const { error: insertError } = await supabase.from('products').insert({
 user_id: user.id,
@@ -138,6 +144,7 @@ contact_phone: formData.contact_phone,
 contact_email: formData.contact_email,
 image_url: mainImageUrl,
 additional_images: additionalImageUrls,
+expires_at: expiresAt.toISOString(),
 })
 
 if (insertError) throw insertError
@@ -149,7 +156,7 @@ const { error: updateError } = await supabase
 
 if (updateError) throw updateError
 
-alert('Listing created successfully!')
+alert(`Listing created successfully! It will expire in ${daysToExpire} days.`)
 router.push('/dashboard')
 } catch (error: any) {
 alert('Error creating listing: ' + error.message)
