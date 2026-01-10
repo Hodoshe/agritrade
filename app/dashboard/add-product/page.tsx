@@ -19,9 +19,20 @@ const [saving, setSaving] = useState(false)
 const [profile, setProfile] = useState<any>(null)
 const [imageFile, setImageFile] = useState<File | null>(null)
 const [formData, setFormData] = useState({
-title: '', category: '', description: '', price: '', is_negotiable: false,
-quantity: '', size_weight: '', health_status: '', province: '',
-delivery_option: '', contact_phone: '', contact_email: '',
+title: '',
+category: '',
+description: '',
+price: '',
+is_negotiable: false,
+quantity: '',
+size_weight: '',
+health_status: '',
+province: '',
+city: '',
+seller_name: '',
+delivery_option: '',
+contact_phone: '',
+contact_email: '',
 })
 
 useEffect(() => {
@@ -38,6 +49,12 @@ return
 const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
 if (data) {
 setProfile(data)
+setFormData(prev => ({
+...prev,
+seller_name: data.company_name || data.full_name || '',
+contact_email: data.email || '',
+contact_phone: data.phone || ''
+}))
 }
 setLoading(false)
 }
@@ -45,7 +62,6 @@ setLoading(false)
 const handleSubmit = async (e: React.FormEvent) => {
 e.preventDefault()
 
-// PAYWALL CHECK
 if (!profile || profile.listings_remaining <= 0) {
 alert('You have no listings remaining. Please upgrade your plan to continue.')
 router.push('/pricing')
@@ -88,6 +104,8 @@ quantity: parseInt(formData.quantity),
 size_weight: formData.size_weight,
 health_status: formData.health_status,
 province: formData.province,
+city: formData.city,
+seller_name: formData.seller_name,
 delivery_option: formData.delivery_option,
 contact_phone: formData.contact_phone,
 contact_email: formData.contact_email,
@@ -96,7 +114,6 @@ image_url: imageUrl,
 
 if (insertError) throw insertError
 
-// DECREMENT LISTINGS REMAINING
 const { error: updateError } = await supabase
 .from('profiles')
 .update({ listings_remaining: profile.listings_remaining - 1 })
@@ -126,7 +143,6 @@ return (
 )
 }
 
-// PAYWALL SCREEN
 if (!profile || profile.listings_remaining <= 0) {
 return (
 <div className="min-h-screen">
@@ -175,12 +191,38 @@ return (
 <form onSubmit={handleSubmit} className="space-y-6">
 <div>
 <label className="block text-sm font-medium mb-2">Product Image *</label>
-<input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] || null)} required className="w-full" />
+<input
+type="file"
+accept="image/*"
+onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+required
+className="w-full"
+/>
 </div>
 
 <div>
 <label className="block text-sm font-medium mb-2">Product Title *</label>
-<input type="text" name="title" value={formData.title} onChange={handleChange} placeholder="e.g., Organic Tomatoes - Grade A" required />
+<input
+type="text"
+name="title"
+value={formData.title}
+onChange={handleChange}
+placeholder="e.g., Organic Tomatoes - Grade A"
+required
+/>
+</div>
+
+<div>
+<label className="block text-sm font-medium mb-2">Seller Name / Farm Name *</label>
+<input
+type="text"
+name="seller_name"
+value={formData.seller_name}
+onChange={handleChange}
+placeholder="e.g., Green Valley Farms or John Doe"
+required
+/>
+<p className="text-xs text-gray-400 mt-1">This will be displayed to buyers on your listing</p>
 </div>
 
 <div>
@@ -193,16 +235,37 @@ return (
 
 <div>
 <label className="block text-sm font-medium mb-2">Description *</label>
-<textarea name="description" value={formData.description} onChange={handleChange} rows={4} placeholder="Describe your product..." required />
+<textarea
+name="description"
+value={formData.description}
+onChange={handleChange}
+rows={4}
+placeholder="Describe your product in detail..."
+required
+/>
 </div>
 
 <div className="grid md:grid-cols-2 gap-6">
 <div>
 <label className="block text-sm font-medium mb-2">Price (ZAR) *</label>
-<input type="number" name="price" value={formData.price} onChange={handleChange} placeholder="0.00" step="0.01" required />
+<input
+type="number"
+name="price"
+value={formData.price}
+onChange={handleChange}
+placeholder="0.00"
+step="0.01"
+required
+/>
 </div>
 <div className="flex items-center pt-8">
-<input type="checkbox" name="is_negotiable" checked={formData.is_negotiable} onChange={handleChange} className="mr-2" />
+<input
+type="checkbox"
+name="is_negotiable"
+checked={formData.is_negotiable}
+onChange={handleChange}
+className="mr-2"
+/>
 <label>Price is negotiable</label>
 </div>
 </div>
@@ -210,25 +273,58 @@ return (
 <div className="grid md:grid-cols-2 gap-6">
 <div>
 <label className="block text-sm font-medium mb-2">Quantity *</label>
-<input type="number" name="quantity" value={formData.quantity} onChange={handleChange} placeholder="e.g., 100" required />
+<input
+type="number"
+name="quantity"
+value={formData.quantity}
+onChange={handleChange}
+placeholder="e.g., 100"
+required
+/>
 </div>
 <div>
 <label className="block text-sm font-medium mb-2">Size/Weight</label>
-<input type="text" name="size_weight" value={formData.size_weight} onChange={handleChange} placeholder="e.g., 50kg bags" />
+<input
+type="text"
+name="size_weight"
+value={formData.size_weight}
+onChange={handleChange}
+placeholder="e.g., 50kg bags"
+/>
 </div>
 </div>
 
 <div>
 <label className="block text-sm font-medium mb-2">Health Status (for livestock)</label>
-<input type="text" name="health_status" value={formData.health_status} onChange={handleChange} placeholder="e.g., Vaccinated" />
+<input
+type="text"
+name="health_status"
+value={formData.health_status}
+onChange={handleChange}
+placeholder="e.g., Vaccinated, Certified healthy"
+/>
 </div>
 
+<div className="grid md:grid-cols-2 gap-6">
 <div>
 <label className="block text-sm font-medium mb-2">Province *</label>
 <select name="province" value={formData.province} onChange={handleChange} required>
 <option value="">Select province</option>
 {PROVINCES.map(prov => <option key={prov} value={prov}>{prov}</option>)}
 </select>
+</div>
+<div>
+<label className="block text-sm font-medium mb-2">City / Town *</label>
+<input
+type="text"
+name="city"
+value={formData.city}
+onChange={handleChange}
+placeholder="e.g., Durban, Ulundi, Pietermaritzburg"
+required
+/>
+<p className="text-xs text-gray-400 mt-1">Helps buyers find nearby products</p>
+</div>
 </div>
 
 <div>
@@ -244,19 +340,41 @@ return (
 <div className="grid md:grid-cols-2 gap-6">
 <div>
 <label className="block text-sm font-medium mb-2">Contact Phone *</label>
-<input type="tel" name="contact_phone" value={formData.contact_phone} onChange={handleChange} placeholder="+27 XX XXX XXXX" required />
+<input
+type="tel"
+name="contact_phone"
+value={formData.contact_phone}
+onChange={handleChange}
+placeholder="+27 XX XXX XXXX"
+required
+/>
 </div>
 <div>
 <label className="block text-sm font-medium mb-2">Contact Email *</label>
-<input type="email" name="contact_email" value={formData.contact_email} onChange={handleChange} placeholder="your@email.com" required />
+<input
+type="email"
+name="contact_email"
+value={formData.contact_email}
+onChange={handleChange}
+placeholder="your@email.com"
+required
+/>
 </div>
 </div>
 
 <div className="flex gap-4">
-<button type="submit" disabled={saving} className="btn-primary text-white flex-1 disabled:opacity-50">
+<button
+type="submit"
+disabled={saving}
+className="btn-primary text-white flex-1 disabled:opacity-50"
+>
 {saving ? 'Creating Listing...' : 'Create Listing'}
 </button>
-<button type="button" onClick={() => router.push('/dashboard')} className="glass-card px-8 py-3">
+<button
+type="button"
+onClick={() => router.push('/dashboard')}
+className="glass-card px-8 py-3"
+>
 Cancel
 </button>
 </div>
