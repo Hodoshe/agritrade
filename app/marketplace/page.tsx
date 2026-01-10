@@ -17,6 +17,7 @@ city: string
 seller_name: string
 delivery_option: string
 image_url: string
+additional_images: string[]
 contact_phone: string
 contact_email: string
 created_at: string
@@ -37,7 +38,9 @@ const [selectedProvince, setSelectedProvince] = useState('All Provinces')
 const [sortBy, setSortBy] = useState('date')
 const [user, setUser] = useState<any>(null)
 const [loading, setLoading] = useState(true)
-const [selectedImage, setSelectedImage] = useState<string | null>(null)
+const [galleryOpen, setGalleryOpen] = useState(false)
+const [galleryImages, setGalleryImages] = useState<string[]>([])
+const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
 useEffect(() => {
 checkUser()
@@ -84,6 +87,21 @@ filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at
 }
 
 setFilteredProducts(filtered)
+}
+
+const openGallery = (mainImage: string, additionalImages: string[]) => {
+const allImages = [mainImage, ...(additionalImages || [])]
+setGalleryImages(allImages)
+setCurrentImageIndex(0)
+setGalleryOpen(true)
+}
+
+const nextImage = () => {
+setCurrentImageIndex((prev) => (prev + 1) % galleryImages.length)
+}
+
+const prevImage = () => {
+setCurrentImageIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length)
 }
 
 if (loading) {
@@ -143,17 +161,19 @@ Browse {products.length} active listings from farmers across South Africa
 </div>
 ) : (
 <div className="grid md:grid-cols-3 gap-6">
-{filteredProducts.map((product) => (
+{filteredProducts.map((product) => {
+const totalImages = 1 + (product.additional_images?.length || 0)
+return (
 <div key={product.id} className="glass-card overflow-hidden">
 <div className="relative h-48 bg-gray-800">
 {product.image_url ? (
 <>
 <img src={product.image_url} alt={product.title} className="w-full h-full object-cover" />
 <button
-onClick={() => setSelectedImage(product.image_url)}
-className="absolute bottom-2 right-2 bg-black/70 hover:bg-black/90 px-3 py-1 rounded text-sm"
+onClick={() => openGallery(product.image_url, product.additional_images || [])}
+className="absolute bottom-2 right-2 bg-black/70 hover:bg-black/90 px-3 py-1 rounded text-sm flex items-center gap-1"
 >
-🔍 View Full Image
+🔍 View Images {totalImages > 1 && `(${totalImages})`}
 </button>
 </>
 ) : (
@@ -215,29 +235,83 @@ Sign in to view contact details
 )}
 </div>
 </div>
-))}
+)
+})}
 </div>
 )}
 </main>
 
-{/* Image Modal */}
-{selectedImage && (
+{/* Image Gallery Modal */}
+{galleryOpen && (
 <div
-className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
-onClick={() => setSelectedImage(null)}
+className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4"
+onClick={() => setGalleryOpen(false)}
 >
-<div className="relative max-w-4xl max-h-[90vh]">
+<div className="relative w-full max-w-5xl" onClick={(e) => e.stopPropagation()}>
+{/* Close Button */}
 <button
-onClick={() => setSelectedImage(null)}
-className="absolute -top-12 right-0 text-white text-2xl hover:text-agri-green"
+onClick={() => setGalleryOpen(false)}
+className="absolute -top-12 right-0 text-white text-2xl hover:text-agri-green z-10"
 >
 ✕ Close
 </button>
+
+<div className="flex gap-4">
+{/* Main Image */}
+<div className="flex-1 flex items-center justify-center">
+<div className="relative">
 <img
-src={selectedImage}
+src={galleryImages[currentImageIndex]}
 alt="Product"
-className="max-w-full max-h-[90vh] object-contain rounded-lg"
+className="max-w-full max-h-[80vh] object-contain rounded-lg"
 />
+
+{/* Navigation Arrows */}
+{galleryImages.length > 1 && (
+<>
+<button
+onClick={prevImage}
+className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/70 hover:bg-black/90 text-white px-4 py-8 rounded text-2xl"
+>
+‹
+</button>
+<button
+onClick={nextImage}
+className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/70 hover:bg-black/90 text-white px-4 py-8 rounded text-2xl"
+>
+›
+</button>
+</>
+)}
+</div>
+</div>
+
+{/* Thumbnail Sidebar */}
+{galleryImages.length > 1 && (
+<div className="w-24 overflow-y-auto max-h-[80vh] space-y-2">
+{galleryImages.map((img, idx) => (
+<button
+key={idx}
+onClick={() => setCurrentImageIndex(idx)}
+className={`w-full h-20 rounded overflow-hidden border-2 transition ${
+idx === currentImageIndex
+? 'border-agri-green'
+: 'border-transparent opacity-60 hover:opacity-100'
+}`}
+>
+<img src={img} alt={`Thumb ${idx + 1}`} className="w-full h-full object-cover" />
+</button>
+))}
+</div>
+)}
+</div>
+
+{/* Image Counter */}
+{galleryImages.length > 1 && (
+<div className="text-center mt-4 text-white">
+{currentImageIndex + 1} / {galleryImages.length}
+</div>
+)}
 </div>
 </div>
 )}
