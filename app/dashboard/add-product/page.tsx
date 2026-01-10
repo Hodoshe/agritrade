@@ -17,22 +17,12 @@ const router = useRouter()
 const [loading, setLoading] = useState(true)
 const [saving, setSaving] = useState(false)
 const [profile, setProfile] = useState<any>(null)
-const [imageFile, setImageFile] = useState<File | null>(null)
+const [mainImage, setMainImage] = useState<File | null>(null)
+const [additionalImages, setAdditionalImages] = useState<File[]>([])
 const [formData, setFormData] = useState({
-title: '',
-category: '',
-description: '',
-price: '',
-is_negotiable: false,
-quantity: '',
-size_weight: '',
-health_status: '',
-province: '',
-city: '',
-seller_name: '',
-delivery_option: '',
-contact_phone: '',
-contact_email: '',
+title: '', category: '', description: '', price: '', is_negotiable: false,
+quantity: '', size_weight: '', health_status: '', province: '', city: '',
+seller_name: '', delivery_option: '', contact_phone: '', contact_email: '',
 })
 
 useEffect(() => {
@@ -59,6 +49,22 @@ contact_phone: data.phone || ''
 setLoading(false)
 }
 
+const handleAdditionalImages = (e: React.ChangeEvent<HTMLInputElement>) => {
+const files = Array.from(e.target.files || [])
+const totalImages = additionalImages.length + files.length
+
+if (totalImages > 4) {
+alert('Maximum 4 additional images allowed (5 total including main image)')
+return
+}
+
+setAdditionalImages(prev => [...prev, ...files])
+}
+
+const removeAdditionalImage = (index: number) => {
+setAdditionalImages(prev => prev.filter((_, i) => i !== index))
+}
+
 const handleSubmit = async (e: React.FormEvent) => {
 e.preventDefault()
 
@@ -74,15 +80,17 @@ try {
 const { data: { user } } = await supabase.auth.getUser()
 if (!user) throw new Error('Not authenticated')
 
-let imageUrl = ''
+let mainImageUrl = ''
+const additionalImageUrls: string[] = []
 
-if (imageFile) {
-const fileExt = imageFile.name.split('.').pop()
-const fileName = `${user.id}/${Date.now()}.${fileExt}`
+// Upload main image
+if (mainImage) {
+const fileExt = mainImage.name.split('.').pop()
+const fileName = `${user.id}/${Date.now()}_main.${fileExt}`
 
 const { error: uploadError } = await supabase.storage
 .from('product-images')
-.upload(fileName, imageFile)
+.upload(fileName, mainImage)
 
 if (uploadError) throw uploadError
 
@@ -90,7 +98,26 @@ const { data: { publicUrl } } = supabase.storage
 .from('product-images')
 .getPublicUrl(fileName)
 
-imageUrl = publicUrl
+mainImageUrl = publicUrl
+}
+
+// Upload additional images
+for (let i = 0; i < additionalImages.length; i++) {
+const file = additionalImages[i]
+const fileExt = file.name.split('.').pop()
+const fileName = `${user.id}/${Date.now()}_${i}.${fileExt}`
+
+const { error: uploadError } = await supabase.storage
+.from('product-images')
+.upload(fileName, file)
+
+if (uploadError) throw uploadError
+
+const { data: { publicUrl } } = supabase.storage
+.from('product-images')
+.getPublicUrl(fileName)
+
+additionalImageUrls.push(publicUrl)
 }
 
 const { error: insertError } = await supabase.from('products').insert({
@@ -109,7 +136,8 @@ seller_name: formData.seller_name,
 delivery_option: formData.delivery_option,
 contact_phone: formData.contact_phone,
 contact_email: formData.contact_email,
-image_url: imageUrl,
+image_url: mainImageUrl,
+additional_images: additionalImageUrls,
 })
 
 if (insertError) throw insertError
@@ -190,14 +218,50 @@ return (
 
 <form onSubmit={handleSubmit} className="space-y-6">
 <div>
-<label className="block text-sm font-medium mb-2">Product Image *</label>
+<label className="block text-sm font-medium mb-2">Main Product Image *</label>
 <input
 type="file"
 accept="image/*"
-onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+onChange={(e) => setMainImage(e.target.files?.[0] || null)}
 required
 className="w-full"
 />
+<p className="text-xs text-gray-400 mt-1">This image will be shown on the product card</p>
+</div>
+
+<div>
+<label className="block text-sm font-medium mb-2">Additional Images (Optional)</label>
+<input
+type="file"
+accept="image/*"
+multiple
+onChange={handleAdditionalImages}
+className="w-full"
+/>
+<p className="text-xs text-gray-400 mt-1">
+Add up to 4 more images (5 total). Buyers can view all images in the gallery.
+</p>
+
+{additionalImages.length > 0 && (
+<div className="mt-3 flex gap-2 flex-wrap">
+{additionalImages.map((file, idx) => (
+<div key={idx} className="relative glass-card p-2">
+<img
+src={URL.createObjectURL(file)}
+alt={`Preview ${idx + 1}`}
+className="w-20 h-20 object-cover rounded"
+/>
+<button
+type="button"
+onClick={() => removeAdditionalImage(idx)}
+className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs"
+>
+✕
+</button>
+</div>
+))}
+</div>
+)}
 </div>
 
 <div>
