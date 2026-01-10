@@ -21,6 +21,7 @@ additional_images: string[]
 contact_phone: string
 contact_email: string
 created_at: string
+expires_at: string
 user_id: string
 }
 
@@ -61,6 +62,7 @@ const { data } = await supabase
 .from('products')
 .select('*')
 .eq('status', 'active')
+.or('expires_at.is.null,expires_at.gt.' + new Date().toISOString())
 .order('created_at', { ascending: false })
 
 if (data) setProducts(data)
@@ -248,7 +250,6 @@ className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4"
 onClick={() => setGalleryOpen(false)}
 >
 <div className="relative w-full max-w-5xl" onClick={(e) => e.stopPropagation()}>
-{/* Close Button */}
 <button
 onClick={() => setGalleryOpen(false)}
 className="absolute -top-12 right-0 text-white text-2xl hover:text-agri-green z-10"
@@ -257,7 +258,6 @@ className="absolute -top-12 right-0 text-white text-2xl hover:text-agri-green z-
 </button>
 
 <div className="flex gap-4">
-{/* Main Image */}
 <div className="flex-1 flex items-center justify-center">
 <div className="relative">
 <img
@@ -266,7 +266,6 @@ alt="Product"
 className="max-w-full max-h-[80vh] object-contain rounded-lg"
 />
 
-{/* Navigation Arrows */}
 {galleryImages.length > 1 && (
 <>
 <button
@@ -286,7 +285,6 @@ className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/70 hover:bg-black/
 </div>
 </div>
 
-{/* Thumbnail Sidebar */}
 {galleryImages.length > 1 && (
 <div className="w-24 overflow-y-auto max-h-[80vh] space-y-2">
 {galleryImages.map((img, idx) => (
@@ -306,7 +304,6 @@ idx === currentImageIndex
 )}
 </div>
 
-{/* Image Counter */}
 {galleryImages.length > 1 && (
 <div className="text-center mt-4 text-white">
 {currentImageIndex + 1} / {galleryImages.length}
