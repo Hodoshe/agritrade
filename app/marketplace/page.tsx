@@ -25,6 +25,10 @@ expires_at: string
 user_id: string
 }
 
+interface ProductWithPlan extends Product {
+subscription_plan: string
+}
+
 const CATEGORIES = ['All', 'Livestock', 'Crops', 'Tools', 'Materials']
 const PROVINCES = [
 'All Provinces', 'Eastern Cape', 'Free State', 'Gauteng', 'KwaZulu-Natal',
@@ -32,11 +36,11 @@ const PROVINCES = [
 ]
 
 export default function Marketplace() {
-const [products, setProducts] = useState<Product[]>([])
-const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
+const [products, setProducts] = useState<ProductWithPlan[]>([])
+const [filteredProducts, setFilteredProducts] = useState<ProductWithPlan[]>([])
 const [selectedCategory, setSelectedCategory] = useState('All')
 const [selectedProvince, setSelectedProvince] = useState('All Provinces')
-const [sortBy, setSortBy] = useState('date')
+const [sortBy, setSortBy] = useState('featured')
 const [user, setUser] = useState<any>(null)
 const [loading, setLoading] = useState(true)
 const [galleryOpen, setGalleryOpen] = useState(false)
@@ -58,14 +62,23 @@ setUser(user)
 }
 
 const loadProducts = async () => {
+// Join products with profiles to get subscription plan
 const { data } = await supabase
 .from('products')
-.select('*')
+.select(`
+*,
+profiles!inner(subscription_plan)
+`)
 .eq('status', 'active')
 .or('expires_at.is.null,expires_at.gt.' + new Date().toISOString())
-.order('created_at', { ascending: false })
 
-if (data) setProducts(data)
+if (data) {
+const productsWithPlan = data.map(p => ({
+...p,
+subscription_plan: p.profiles.subscription_plan
+}))
+setProducts(productsWithPlan)
+}
 setLoading(false)
 }
 
@@ -80,10 +93,29 @@ if (selectedProvince !== 'All Provinces') {
 filtered = filtered.filter(p => p.province === selectedProvince)
 }
 
-if (sortBy === 'price-low') {
-filtered.sort((a, b) => a.price - b.price)
+// SMART SORTING: Featured first, then by selected option
+if (sortBy === 'featured') {
+filtered.sort((a, b) => {
+// Professional (featured) first
+if (a.subscription_plan === 'professional' && b.subscription_plan !== 'professional') return -1
+if (b.subscription_plan === 'professional' && a.subscription_plan !== 'professional') return 1
+// Then by date
+return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+})
+} else if (sortBy === 'price-low') {
+filtered.sort((a, b) => {
+// Featured first, then price
+if (a.subscription_plan === 'professional' && b.subscription_plan !== 'professional') return -1
+if (b.subscription_plan === 'professional' && a.subscription_plan !== 'professional') return 1
+return a.price - b.price
+})
 } else if (sortBy === 'price-high') {
-filtered.sort((a, b) => b.price - a.price)
+filtered.sort((a, b) => {
+// Featured first, then price
+if (a.subscription_plan === 'professional' && b.subscription_plan !== 'professional') return -1
+if (b.subscription_plan === 'professional' && a.subscription_plan !== 'professional') return 1
+return b.price - a.price
+})
 } else {
 filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 }
@@ -147,6 +179,7 @@ Browse {products.length} active listings from farmers across South Africa
 <div>
 <label className="block text-sm font-medium mb-2">Sort By</label>
 <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full">
+<option value="featured">Featured First</option>
 <option value="date">Newest First</option>
 <option value="price-low">Price: Low to High</option>
 <option value="price-high">Price: High to Low</option>
@@ -165,9 +198,16 @@ Browse {products.length} active listings from farmers across South Africa
 <div className="grid md:grid-cols-3 gap-6">
 {filteredProducts.map((product) => {
 const totalImages = 1 + (product.additional_images?.length || 0)
+const isFeatured = product.subscription_plan === 'professional'
+
 return (
-<div key={product.id} className="glass-card overflow-hidden">
+<div key={product.id} className={`glass-card overflow-hidden ${isFeatured ? 'ring-2 ring-yellow-500' : ''}`}>
 <div className="relative h-48 bg-gray-800">
+{isFeatured && (
+<div className="absolute top-2 left-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 z-10">
+⭐ FEATURED
+</div>
+)}
 {product.image_url ? (
 <>
 <img src={product.image_url} alt={product.title} className="w-full h-full object-cover" />
