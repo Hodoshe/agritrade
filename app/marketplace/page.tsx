@@ -62,23 +62,33 @@ setUser(user)
 }
 
 const loadProducts = async () => {
-// Join products with profiles to get subscription plan
-const { data } = await supabase
+// Get products first
+const { data: productsData } = await supabase
 .from('products')
-.select(`
-*,
-profiles!inner(subscription_plan)
-`)
+.select('*')
 .eq('status', 'active')
 .or('expires_at.is.null,expires_at.gt.' + new Date().toISOString())
 
-if (data) {
-const productsWithPlan = data.map(p => ({
-...p,
-subscription_plan: p.profiles.subscription_plan
-}))
-setProducts(productsWithPlan)
+if (!productsData) {
+setLoading(false)
+return
 }
+
+// Get user IDs to fetch their plans
+const userIds = [...new Set(productsData.map(p => p.user_id))]
+
+const { data: profilesData } = await supabase
+.from('profiles')
+.select('id, subscription_plan')
+.in('id', userIds)
+
+// Merge products with subscription plans
+const productsWithPlan = productsData.map(product => ({
+...product,
+subscription_plan: profilesData?.find(p => p.id === product.user_id)?.subscription_plan || 'free'
+}))
+
+setProducts(productsWithPlan)
 setLoading(false)
 }
 
