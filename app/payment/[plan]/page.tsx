@@ -7,9 +7,24 @@ import Navbar from '@/components/Navbar'
 import Link from 'next/link'
 
 const PLAN_DETAILS: any = {
-'pay-per-listing': { name: 'Pay-As-You-Go', price: '14.99', listings: 1 },
-'starter': { name: 'Starter', price: '199.00', listings: 10 },
-'professional': { name: 'Professional', price: '499.00', listings: 50 },
+'pay-per-listing': {
+name: 'Pay-As-You-Go',
+price: '14.99',
+listings: 1,
+yocoLink: 'https://pay.yoco.com/r/2JqrEa'
+},
+'starter': {
+name: 'Starter',
+price: '199.00',
+listings: 10,
+yocoLink: 'https://pay.yoco.com/r/mMLP6V'
+},
+'professional': {
+name: 'Professional',
+price: '499.00',
+listings: 50,
+yocoLink: 'https://pay.yoco.com/r/mdBZbl'
+},
 }
 
 export default function PaymentPage({ params }: { params: { plan: string } }) {
@@ -96,19 +111,23 @@ return (
 <p><strong>Account Number:</strong> 62812345678</p>
 <p><strong>Branch Code:</strong> 250655</p>
 <p><strong>Reference:</strong> Your email address</p>
+<p className="text-yellow-400 mt-2">⚠️ Use your email as reference so we can identify your payment</p>
 </div>
 </div>
 
 <div className="glass-card p-4">
-<h4 className="font-bold text-white mb-2">Option 2: Yoco Payment Link</h4>
+<h4 className="font-bold text-white mb-2">Option 2: Card Payment (Yoco)</h4>
 <a
-href={`https://pay.yoco.com/agritrade-${params.plan}`}
+href={plan.yocoLink}
 target="_blank"
+rel="noopener noreferrer"
 className="btn-primary text-white inline-block mt-2"
 >
-Pay R{plan.price} with Card
+Pay R{plan.price} with Card →
 </a>
-<p className="text-xs mt-2">Opens in new window. Save your reference code after payment.</p>
+<p className="text-xs mt-3 text-yellow-400">
+⚠️ After payment, Yoco will show a reference number. Copy it and paste below.
+</p>
 </div>
 </div>
 </div>
@@ -127,7 +146,8 @@ required
 className="w-full"
 />
 <p className="text-xs text-gray-400 mt-2">
-This is the reference/transaction number from your payment receipt
+For card payments: Copy the reference from Yoco confirmation page<br />
+For bank transfer: Use your email address as reference
 </p>
 </div>
 
@@ -141,10 +161,10 @@ This is the reference/transaction number from your payment receipt
 <p className="font-bold mb-2">⏱️ Verification Process:</p>
 <ul className="space-y-1 text-gray-300">
 <li>1. Complete payment using one of the options above</li>
-<li>2. Enter your reference code in the form</li>
-<li>3. We'll verify your payment within 4 hours</li>
-<li>4. Your plan will be activated automatically</li>
-<li>5. You'll receive email confirmation</li>
+<li>2. Copy your payment reference/transaction number</li>
+<li>3. Paste it in the form above and click submit</li>
+<li>4. We'll verify your payment within 4 hours (8am-8pm daily)</li>
+<li>5. Your plan will be activated and you'll receive email confirmation</li>
 </ul>
 </div>
 
