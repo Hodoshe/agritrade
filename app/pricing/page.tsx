@@ -23,6 +23,7 @@ name: 'Pay-As-You-Go',
 price: '14.99',
 period: 'per listing',
 description: 'Perfect for occasional sellers',
+slug: 'pay-per-listing',
 features: [
 '1 listing per payment',
 '30 days listing duration',
@@ -39,6 +40,7 @@ name: 'Starter',
 price: '199',
 period: 'per month',
 description: 'Great for small farmers',
+slug: 'starter',
 features: [
 '10 active listings per month',
 '60 days listing duration',
@@ -57,6 +59,7 @@ name: 'Professional',
 price: '499',
 period: 'per month',
 description: 'Best for growing businesses',
+slug: 'professional',
 features: [
 '50 active listings per month',
 '90 days listing duration',
@@ -122,15 +125,16 @@ MOST POPULAR
 </ul>
 
 {user ? (
-<button
-className={`w-full py-3 rounded-lg font-bold transition ${
+<Link
+href={`/payment/${plan.slug}`}
+className={`block text-center w-full py-3 rounded-lg font-bold transition ${
 plan.popular
 ? 'btn-primary text-white'
 : 'glass-card hover:border-agri-green'
 }`}
 >
 {plan.cta}
-</button>
+</Link>
 ) : (
 <Link
 href="/auth/signup"
@@ -156,8 +160,8 @@ Frequently Asked Questions
 <div className="glass-card p-6">
 <h3 className="font-bold text-lg mb-2">How does payment work?</h3>
 <p className="text-gray-300">
-We accept payments via bank transfer and Yoco payment links. After selecting your plan,
-you'll receive payment instructions via email. Your listings go live once payment is confirmed.
+We accept payments via bank transfer (EFT) and card payments through Yoco. After selecting your plan,
+you'll see payment options and instructions. Submit your payment reference, and we'll activate your plan within 4 hours.
 </p>
 </div>
 
@@ -172,8 +176,8 @@ search results, giving you maximum visibility to potential buyers.
 <div className="glass-card p-6">
 <h3 className="font-bold text-lg mb-2">Can I upgrade or downgrade my plan?</h3>
 <p className="text-gray-300">
-Yes! You can change your plan at any time. Upgrades take effect immediately, while downgrades
-apply at the start of your next billing cycle. Unused listings from your current plan roll over.
+Yes! You can change your plan at any time. Contact support to upgrade immediately or schedule
+a downgrade for your next billing cycle. Unused listings from your current plan roll over.
 </p>
 </div>
 
@@ -206,8 +210,16 @@ within 24 hours. Professional plan users also get phone support during business 
 <div className="glass-card p-6">
 <h3 className="font-bold text-lg mb-2">Can I cancel my subscription?</h3>
 <p className="text-gray-300">
-Yes, you can cancel anytime from your profile settings. Your listings remain active until
+Yes, you can cancel anytime by contacting support. Your listings remain active until
 the end of your billing period. No cancellation fees apply.
+</p>
+</div>
+
+<div className="glass-card p-6">
+<h3 className="font-bold text-lg mb-2">How long does payment verification take?</h3>
+<p className="text-gray-300">
+We verify payments and activate plans within 4 hours during business hours (8am-8pm SAST, 7 days a week).
+You'll receive email confirmation once your plan is activated.
 </p>
 </div>
 </div>
