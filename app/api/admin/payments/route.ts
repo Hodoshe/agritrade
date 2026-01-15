@@ -17,7 +17,7 @@ export async function GET() {
       return NextResponse.json({ payments: [] })
     }
 
-    const userIds = [...new Set(requests.map(r => r.user_id))]
+    const userIds = Array.from(new Set(requests.map(r => r.user_id)))
     const { data: profiles } = await supabaseAdmin
       .from('profiles')
       .select('id, email, full_name')
