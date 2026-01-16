@@ -66,12 +66,12 @@ export default function Home() {
         <div className="glass-card p-12 mt-24">
           <div className="grid md:grid-cols-3 gap-8 text-center">
             <div>
-              <div className="text-5xl font-bold gradient-text mb-2">1000+</div>
-              <p className="text-gray-300">Active Listings</p>
+              <div className="text-5xl font-bold gradient-text mb-2">Growing</div>
+              <p className="text-gray-300">Community of Sellers</p>
             </div>
             <div>
-              <div className="text-5xl font-bold gradient-text mb-2">500+</div>
-              <p className="text-gray-300">Registered Sellers</p>
+              <div className="text-5xl font-bold gradient-text mb-2">Fast</div>
+              <p className="text-gray-300">Growing Marketplace</p>
             </div>
             <div>
               <div className="text-5xl font-bold gradient-text mb-2">9</div>
